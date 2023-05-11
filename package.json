@@ -1,0 +1,50 @@
+{
+  "name": "@vortx/mxbi",
+  "version": "0.1.0",
+  "description": "",
+  "main": "./lib/index.js",
+  "bin": {
+    "mxbi": "./lib/index.js"
+  },
+  "scripts": {
+    "build": "yarn build:commonjs && yarn build:es",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:commonjs": "rimraf lib && tsc --target es5 --outDir lib --module commonjs --declaration",
+    "build:es": "rimraf es && tsc --target es6 --outDir es --module es6",
+    "ts": "ts-node src/",
+    "prepare": "yarn build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VortX-DAO/mxbi.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/VortX-DAO/mxbi/issues"
+  },
+  "homepage": "https://github.com/VortX-DAO/mxbi",
+  "dependencies": {
+    "@multiversx/sdk-core": "^12.1.0",
+    "@multiversx/sdk-network-providers": "^1.3.0",
+    "commander": "^10.0.0",
+    "download-git-repo": "^0.0.2",
+    "figlet": "^1.5.2",
+    "simple-git": "^3.17.0"
+  },
+  "devDependencies": {
+    "@types/git-clone": "^0.2.0",
+    "@types/node": "^18.15.11",
+    "rimraf": "^5.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  },
+  "files": [
+    "es",
+    "lib"
+  ],
+  "types": "./lib/index.d.ts",
+  "jsnext:main": "./es/index.js",
+  "module": "./es/index.js"
+}
