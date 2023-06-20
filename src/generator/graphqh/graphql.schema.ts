@@ -1,36 +1,50 @@
 import * as utils from '../../utils';
+
+export function graphqlTemplate(folderPath: string, name: string) {
+  const graphqlContent = '';
+  let graphqlFile = `${folderPath}/${name}.graphql`;
+  utils.writeFile(graphqlFile, graphqlContent, false);
+}
+
 export function generateContractModel(
   json: any,
   folderPath: string,
   name: string,
+  needInputAddress: boolean,
 ) {
   let tupleTypes: string[] = [];
   const queries = json.endpoints
     .filter((endpoint: any) => endpoint.mutability === 'readonly')
     .map((endpoint: any) => {
-      const args = endpoint.inputs
-        .map((input: any) => {
+      let args: string[] = [];
+      args = args.concat(
+        endpoint.inputs.map((input: any) => {
           let tupleObj = generateTupleType(input.type);
           if (tupleObj != undefined) {
             tupleTypes.push(tupleObj);
           }
 
-          return `${input.name}: ${utils.typeMappingForOutput(
+          return `${input.name}: ${utils.abiTypeMapping(
             input.type,
+            false,
             true,
           )}`;
-        })
-        .join(', ');
+        }),
+      );
       let tupleObj = generateTupleType(endpoint.outputs[0]?.type);
       if (tupleObj != undefined) {
         tupleTypes.push(tupleObj);
       }
       if (args.length > 0) {
-        return `${endpoint.name}(${args}): ${utils.typeMappingForOutput(endpoint.outputs[0]?.type) || 'Boolean'
-          } `;
-      }
-      return `${endpoint.name}: ${utils.typeMappingForOutput(endpoint.outputs[0]?.type) || 'Boolean'
+        return `${endpoint.name}(${args.join(',')}): ${
+          utils.abiTypeMapping(endpoint.outputs[0]?.type, false, false) ||
+          'Boolean'
         } `;
+      }
+      return `${endpoint.name}: ${
+        utils.abiTypeMapping(endpoint.outputs[0]?.type, false, false) ||
+        'Boolean'
+      } `;
     })
     .join('\n  ');
 
@@ -40,7 +54,7 @@ export function generateContractModel(
         const fields = typeData.fields
           .map(
             (field: any) =>
-              `${field.name}: ${utils.typeMappingForOutput(field.type)} `,
+              `${field.name}: ${utils.abiTypeMapping(field.type, false)} `,
           )
           .join('\n  ');
         return `type ${typeName} { \n  ${fields} \n } `;
@@ -61,7 +75,11 @@ export function generateContractModel(
         const fields = typeData.fields
           .map(
             (field: any) =>
-              `${field.name}: ${utils.typeMappingForOutput(field.type, true)} `,
+              `${field.name}: ${utils.abiTypeMapping(
+                field.type,
+                false,
+                true,
+              )} `,
           )
           .join('\n  ');
         return `input ${typeName}Input { \n  ${fields} \n } `;
@@ -79,24 +97,21 @@ export function generateContractModel(
     (value, index) => tupleTypes.indexOf(value) === index,
   );
   const joinedString = uniqueArray.join(', ');
-  console.log('Generate *.graphql File');
-  console.log(folderPath, name);
   // Create *.module.ts file
-  let graphqlFile = `${folderPath}/${name}.graphql`;
-  let graphqlContent = `type ${utils.snakeCaseToCamelCase(name)} {
-  ${queries}
+  let graphqlFile = `${folderPath}/generatedModel.graphql`;
+  let className = utils.generateClassName(name);
+  let variableName = utils.generateVariableName(name);
+  let graphqlContent = `scalar AddressCustom
+scalar BufferCustom
+
+type ${className} {
+  ${needInputAddress == true ? 'address: String\n' : ''}${queries}
 }
 
 type Query {
-  ${utils.removeUnderScore(name)}: ${utils.snakeCaseToCamelCase(name)}
-}
-
-type Address {
-  bech32: String
-}
-
-input AddressInput {
-  bech32: String
+  ${variableName}${
+    needInputAddress == true ? '(address: String)' : ''
+  }: ${className}
 }
 
 ${joinedString}
@@ -105,15 +120,15 @@ ${inputTypes}
 
 ${types}`;
 
-  utils.writeFile(graphqlFile, graphqlContent);
+  utils.writeGraphqlFile(graphqlFile, graphqlContent);
 }
 
 function generateTupleType(str: string): string | undefined {
   const check = extractTupleType(str);
   if (check != undefined) {
-    let type0 = utils.typeMappingForOutput(check[0]);
-    let type1 = utils.typeMappingForOutput(check[1]);
-    return `type ${check[0]}${check[1]}TupleObj {
+    let type0 = utils.abiTypeMapping(check[0], false);
+    let type1 = utils.abiTypeMapping(check[1], false);
+    return `type ${utils.generateClassName(check[0])}${check[1]}TupleObj {
   first: ${type0}
   second: ${type1}
 }\n\n`;

@@ -1,3 +1,4 @@
+import { Network } from '../../config';
 import * as utils from '../../utils';
 const DEFAULT_CONTRACT_ADDRESS = 'INPUT CONTRACT ADDRESS';
 
@@ -5,6 +6,7 @@ export function generateConfigFile(
   path: string,
   abiNames: string[],
   abiPaths: string[],
+  networkConfig: Network,
 ) {
   console.log('Generate config.yaml File');
 
@@ -12,7 +14,7 @@ export function generateConfigFile(
   let contractPath = '';
   for (let i = 0; i < abiNames.length; i++) {
     let name = abiNames[i];
-    let path = "./" + abiPaths[i].split("/").slice(2).join("/");
+    let path = './src/abi/' + abiPaths[i].split('/').slice(2).join('/');
     if (name == abiNames[0]) {
       contractAddress += `${name}:
     - '${DEFAULT_CONTRACT_ADDRESS}'`;
@@ -30,12 +32,12 @@ export function generateConfigFile(
   }
 
   let configContent = `urls:
-  api: 'https://devnet-api.multiversx.com'
+  api: ${networkConfig.proxy_url} 
   swagger:
     - 'https://devnet-microservice.multiversx.com'
     - 'https://testnet-microservice.multiversx.com'
     - 'https://microservice.multiversx.com'
-  redis: '127.0.0.1'
+  redis: ${networkConfig.redis_url} 
 wallet:
   ${contractAddress}
 abi:
@@ -77,5 +79,5 @@ keepAliveTimeout:
   upstream: 60000
 useCachingInterceptor: false
   `;
-  utils.writeFile(path, configContent);
+  utils.writeFile(path, configContent, false);
 }

@@ -1,8 +1,8 @@
-# mxbi - Generate Backend for MX Smart Contract Endpoints
+## mxbi - Generate Backend for MX Smart Contract Endpoints
 
 mxbi is a command-line interface (CLI) tool that generates backend code for MX smart contract endpoints. The tool generates TypeScript code that can be used to implement the server-side logic for smart contract endpoints.
 
-## Installation
+### Installation
 
 To install mxbi, run the following command:
 
@@ -12,28 +12,27 @@ npm install -g @vortx/mxbi
 
 This will install the tool globally on your system.
 
-## Usage
+### Usage
 
 To use mxbi, run the following command:
 
 ```bash
-mxbi generate-backend [options]
+mxbi generate-backend --contractPath <contractPath> [--skip-build]
 ```
 
 The following options are available:
 
-- `-n, --name <name>`: The name of your smart contract project. If not provided, the name of the current working directory will be used.
-- `-g, --generatedPath <generatedPath>`: The directory where the generated files should be written. If not provided, the current working directory will be used.
+- `-c, --contractPath <contractPath>`: The path to your directory containing the smart contracts. This is a required option.
 
-For example, to generate endpoint code for a smart contract project called `MyContract`, you would run the following command:
+- `-s, --skip-build`: If included, mxbi will skip the build process. This option is optional and defaults to `false` if not provided.
+
+For example, to generate endpoint code for a directory of smart contracts located at `./contracts/`, you would run the following command:
 
 ```bash
-mxbi generate-backend -n MyContract -g /path/to/project
+mxbi generate-backend --contractPath ./contracts/
 ```
 
-By default, the tool will generate endpoint code in the current working directory with the name of the current working directory.
-
-## Building and Running the Tool
+### Building and Running the Tool
 
 To build and run the tool, use the following commands:
 
@@ -41,8 +40,16 @@ To build and run the tool, use the following commands:
 npm run build && cd lib && npm link && chmod +x /opt/homebrew/bin/mxbi
 ```
 
-This will build the tool and create a symbolic link to the tool in the `/opt/homebrew/bin` directory, which allows you to run the tool by typing `mxbi` in the command line.
+This will build the tool, create a symbolic link to the tool in the `/opt/homebrew/bin` directory, and set executable permissions, which allows you to run the tool by typing `mxbi` in the command line.
 
-## License
+### Issues
+
+If you encounter any issues while using mxbi, please file an issue in the GitHub repository.
+
+### Contributing
+
+Contributions to mxbi are always welcome. If you're interested in contributing, please fork the repository and submit a pull request. For major changes, please open an issue first to discuss what you would like to change.
+
+### License
 
 mxbi is released under the MIT License. See the `LICENSE` file for details.

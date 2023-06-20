@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
-const { Command } = require('commander');
-const fs = require('fs');
-const path = require('path');
+import { Command } from 'commander';
 const figlet = require('figlet');
 
 import { generateBackend } from './generator/backendGenerator';
@@ -20,13 +18,21 @@ program
 program
   .command('generate-backend')
   .description('Generate Backend for MX Smartcontract endpoints')
-  .option('-n, --name <name>', 'Project name')
-  .option('-g, --generatedPath <generatedPath>', 'Generated Path')
+  .option('-c, --contractPath <contractPath>', 'Contract Path')
+  .option('-s, --skip-build', 'Skip Build', false)
   .action(
-    ({ name, generatedPath }: { name: string; generatedPath: string }) => {
-      const _name = name ?? path.basename(process.cwd());
-      const _generatedPath = generatedPath ?? process.cwd();
-      generateBackend(_name, _generatedPath);
+    ({
+      contractPath,
+      skipBuild,
+    }: {
+      contractPath: string;
+      skipBuild: boolean;
+    }) => {
+      if (!contractPath) {
+        console.error('Contract Path is require');
+        process.exit(1);
+      }
+      generateBackend(contractPath, skipBuild);
     },
   );
 

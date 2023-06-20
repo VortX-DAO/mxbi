@@ -1,4 +1,4 @@
-const simpleGit = require('simple-git');
+import simpleGit from 'simple-git';
 
 export async function downloadRepository(
   gitUrl: string,
@@ -8,7 +8,6 @@ export async function downloadRepository(
   try {
     const git = simpleGit();
     await git.clone(gitUrl, folderPath, ['-b', branchName]);
-    console.log('Folder created successfully!');
   } catch (error: any) {
     console.error(`Error cloning ${gitUrl}: ${error.message}`);
   }
