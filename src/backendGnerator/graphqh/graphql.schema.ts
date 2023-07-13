@@ -26,7 +26,7 @@ export function generateContractModel(
 
           return `${input.name}: ${utils.abiTypeMapping(
             input.type,
-            false,
+            utils.TypeMapping.Graphql,
             true,
           )}`;
         }),
@@ -37,13 +37,19 @@ export function generateContractModel(
       }
       if (args.length > 0) {
         return `${endpoint.name}(${args.join(',')}): ${
-          utils.abiTypeMapping(endpoint.outputs[0]?.type, false, false) ||
-          'Boolean'
+          utils.abiTypeMapping(
+            endpoint.outputs[0]?.type,
+            utils.TypeMapping.Graphql,
+            false,
+          ) || 'Boolean'
         } `;
       }
       return `${endpoint.name}: ${
-        utils.abiTypeMapping(endpoint.outputs[0]?.type, false, false) ||
-        'Boolean'
+        utils.abiTypeMapping(
+          endpoint.outputs[0]?.type,
+          utils.TypeMapping.Graphql,
+          false,
+        ) || 'Boolean'
       } `;
     })
     .join('\n  ');
@@ -54,7 +60,10 @@ export function generateContractModel(
         const fields = typeData.fields
           .map(
             (field: any) =>
-              `${field.name}: ${utils.abiTypeMapping(field.type, false)} `,
+              `${field.name}: ${utils.abiTypeMapping(
+                field.type,
+                utils.TypeMapping.Graphql,
+              )} `,
           )
           .join('\n  ');
         return `type ${typeName} { \n  ${fields} \n } `;
@@ -77,7 +86,7 @@ export function generateContractModel(
             (field: any) =>
               `${field.name}: ${utils.abiTypeMapping(
                 field.type,
-                false,
+                utils.TypeMapping.Graphql,
                 true,
               )} `,
           )
@@ -126,8 +135,8 @@ ${types}`;
 function generateTupleType(str: string): string | undefined {
   const check = extractTupleType(str);
   if (check != undefined) {
-    let type0 = utils.abiTypeMapping(check[0], false);
-    let type1 = utils.abiTypeMapping(check[1], false);
+    let type0 = utils.abiTypeMapping(check[0], utils.TypeMapping.Graphql);
+    let type1 = utils.abiTypeMapping(check[1], utils.TypeMapping.Graphql);
     return `type ${utils.generateClassName(check[0])}${check[1]}TupleObj {
   first: ${type0}
   second: ${type1}

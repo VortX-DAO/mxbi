@@ -39,9 +39,14 @@ export function generateVariableName(v: string): string {
 //Complex string utils//
 export function optionType(opt: string): string {
   const regex = /Option<(.+)>/i;
+  const regex2 = /optional<(.+)>/i;
   const match = opt.match(regex);
   if (match) {
     return match[1];
+  }
+  const match2 = opt.match(regex2);
+  if (match2) {
+    return match2[1];
   }
   return '';
 }

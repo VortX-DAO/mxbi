@@ -169,7 +169,7 @@ export class AbiGenerator {
           let inputName = input.name + 'Args';
           return `${inputName}: ${utils.abiTypeMapping(
             input.type,
-            true,
+            utils.TypeMapping.Typescript,
             true,
           )} `;
         }),
@@ -183,7 +183,11 @@ export class AbiGenerator {
         endpoint.inputs.map((input: any) => {
           return `@Args('${input.name}') ${
             input.name + 'Args'
-          }: ${utils.abiTypeMapping(input.type, true, true)} `;
+          }: ${utils.abiTypeMapping(
+            input.type,
+            utils.TypeMapping.Typescript,
+            true,
+          )} `;
         }),
       );
 
@@ -197,11 +201,14 @@ export class AbiGenerator {
       let returnValue = utils.parserMapping(
         endpoint.outputs[0]?.type,
         this.jsonAbi,
-        true,
+        utils.TypeMapping.Typescript,
       );
 
       let cacheEnable = this.config.isCacheEnable(this.name, endpoint.name);
-      let classNameType = utils.abiTypeMapping(endpoint.outputs[0]?.type, true);
+      let classNameType = utils.abiTypeMapping(
+        endpoint.outputs[0]?.type,
+        utils.TypeMapping.Typescript,
+      );
       let ttl = this.config.redisTtl(this.name, endpoint.name) ?? 6;
       let serviceFns = `
 async ${endpoint.name}(${args.join(',')})${`: Promise<${

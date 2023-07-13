@@ -26,14 +26,32 @@ export function copyAbis(abiPaths: string[], newAbisFolder: string): string[] {
 
 function listFilesWithAbiJson(folderPath: string): string[] {
   let abiJsonFiles: string[] = [];
+
   const files = fs.readdirSync(folderPath);
+  let fullAbiJsonFilesInFolder: string[] = [];
+  let simpleAbiJsonFilesInFolder: string[] = [];
+
   files.forEach((file) => {
     const filePath = path.join(folderPath, file);
+
     if (fs.statSync(filePath).isDirectory()) {
       abiJsonFiles = abiJsonFiles.concat(listFilesWithAbiJson(filePath));
-    } else if (file.endsWith('.abi.json')) {
-      abiJsonFiles.push(filePath);
+    } else {
+      if (file.endsWith('-full.abi.json')) {
+        fullAbiJsonFilesInFolder.push(filePath);
+      } else if (file.endsWith('.abi.json')) {
+        simpleAbiJsonFilesInFolder.push(filePath);
+      }
     }
   });
+
+  // If there are fullAbiJsonFiles in the folder, add them to the result
+  // else add the simpleAbiJsonFiles to the result
+  if (fullAbiJsonFilesInFolder.length > 0) {
+    abiJsonFiles = abiJsonFiles.concat(fullAbiJsonFilesInFolder);
+  } else if (simpleAbiJsonFilesInFolder.length > 0) {
+    abiJsonFiles = abiJsonFiles.concat(simpleAbiJsonFilesInFolder);
+  }
+
   return abiJsonFiles;
 }

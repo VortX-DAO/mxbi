@@ -7,10 +7,10 @@ import * as cacheWarmerGenerator from './cache';
 import * as mxbiConfig from './../config';
 import path from 'path';
 
-async function createBackendFolder(pwd: string) {
+async function createTemplateFolder(pwd: string) {
   await utils.downloadRepository(
-    mxbiConfig.TEMPLATE_REPOSITORY,
-    mxbiConfig.TEMPLATE_REPOSITORY_BRANCH,
+    mxbiConfig.TEMPLATE_BACKEND_REPOSITORY,
+    mxbiConfig.TEMPLATE_BACKEND_REPOSITORY_BRANCH,
     pwd,
   );
 }
@@ -144,7 +144,7 @@ export async function generateBackend(
 
   if (utils.isDirectoryEmpty(utils.getWorkingDirectory())) {
     console.log('Generating New Backend');
-    await createBackendFolder(utils.getWorkingDirectory());
+    await createTemplateFolder(utils.getWorkingDirectory());
     mxbiConfig.createDefaultMxbiConfig();
     let config = new mxbiConfig.MxbiConfig(
       utils.getWorkingDirectory() + '/mxbi_config.yaml',
@@ -164,7 +164,7 @@ export async function generateBackend(
       let pwd = utils.getWorkingDirectory();
       let config = new mxbiConfig.MxbiConfig(pwd + '/mxbi_config.yaml');
       let parent = path.dirname(pwd) + `/${Date.now()}`;
-      await createBackendFolder(parent);
+      await createTemplateFolder(parent);
       utils.moveAllFilesAndFolders(parent, pwd);
       utils.removeAll(parent);
       newBackend(contractPath, config);

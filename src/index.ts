@@ -3,7 +3,7 @@
 import { Command } from 'commander';
 const figlet = require('figlet');
 
-import { generateBackend } from './generator/backendGenerator';
+import { generateBackend } from './backendGnerator/';
 
 const program = new Command();
 
@@ -18,8 +18,8 @@ program
 program
   .command('generate-backend')
   .description('Generate Backend for MX Smartcontract endpoints')
-  .option('-c, --contractPath <contractPath>', 'Contract Path')
-  .option('-s, --skip-build', 'Skip Build', false)
+  .option('-c, --contractPath <contractPath>', 'contract Path')
+  .option('-s, --skip-build', 'skip Build', false)
   .action(
     ({
       contractPath,
