@@ -4,7 +4,7 @@ import * as constants from './defaultConstants';
 
 export class Function {
   name?: string;
-  cache_disable?: boolean;
+  cache_enable?: boolean;
   abi_name?: string;
   redis_ttl?: number;
   gas_limit?: number;
@@ -19,9 +19,9 @@ export class Network {
 }
 
 export class MxbiConfig {
-  network: Network;
-  functions: Function[] = [];
-  needInputAddress: string[] = [];
+  private network: Network;
+  private functions: Function[] = [];
+  private needInputAddress: string[] = [];
 
   constructor(filename: string) {
     const doc = yaml.load(fs.readFileSync(filename, 'utf8')) as Record<
@@ -42,12 +42,11 @@ export class MxbiConfig {
         gas_limit: func.gas_limit,
         name: func.name,
         abi_name: func.abi_name,
-        cache_disable: func.cache_disable,
+        cache_enable: func.cache_enable,
         warm_enable: func.warm?.enable || false,
         default_args: func.default_args as Record<string, any>[],
       })) || [];
     this.needInputAddress = doc.needInputAddress || [];
-    console.log(`mxbi_config.yaml load:\n ${JSON.stringify(this, null, 2)}\n`);
   }
 
   writeMxbiConfig() {
@@ -62,12 +61,44 @@ export class MxbiConfig {
     return this.network!;
   }
 
-  getFunctions(): Function[] {
-    return this.functions;
-  }
-
   getNeedInputAddress(): string[] {
     return this.needInputAddress;
+  }
+
+  getCustomWarmerFns(abiName: string): Function[] {
+    return this.functions.filter(
+      (v) =>
+        v.abi_name == abiName &&
+        v.warm_enable == true &&
+        v.default_args != undefined,
+    );
+  }
+
+  needRemoveWarmer(abiName: string): string[] {
+    return this.functions
+      .filter((v) => v.abi_name == abiName && v.warm_enable == false)
+      .map((v) => v.name!)
+      .filter((v) => v !== undefined);
+  }
+
+  isCacheEnable(abiName: string, name: string): boolean {
+    const v = this.functions.filter((v) => {
+      return v.abi_name == abiName && v.name == name;
+    });
+    if (v.length > 0) {
+      return v[0].cache_enable ?? true;
+    }
+    return true;
+  }
+
+  redisTtl(abiName: string, name: string): number | undefined {
+    const v = this.functions.filter((v) => {
+      return v.abi_name == abiName && v.name == name;
+    });
+    if (v.length > 0) {
+      return v[0].redis_ttl;
+    }
+    return undefined;
   }
 }
 

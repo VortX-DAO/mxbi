@@ -16,6 +16,7 @@ export class AbiGenerator {
   needInputAddress: boolean;
   customWarmer: Function[];
   isEmpty = false;
+  config: MxbiConfig;
 
   constructor(
     abiPath: string,
@@ -25,17 +26,14 @@ export class AbiGenerator {
   ) {
     const jsonContent = fs.readFileSync(abiPath, { encoding: 'utf8' });
     this.jsonAbi = JSON.parse(jsonContent);
+    this.config = mxbiConfig;
     this.name = utils.generateVariableName(
       this.jsonAbi.buildInfo.contractCrate.name,
     );
     this.folderPath = folderPath;
     this.needInputAddress = needInputAddress.includes(this.name);
 
-    this.customWarmer = mxbiConfig.functions.filter((v) => {
-      return v.abi_name?.trim() == this.name.trim();
-    });
-
-    let fns = generateFuncsBody(this.jsonAbi, this.name, this.needInputAddress);
+    let fns = this.generateFuncsBody();
 
     this.resolverFns = fns[1];
     this.serviceFns = fns[0];
@@ -44,6 +42,9 @@ export class AbiGenerator {
     if (this.serviceFns.length == 0) {
       this.isEmpty = true;
     }
+
+    this.customWarmer = mxbiConfig.getCustomWarmerFns(this.name);
+    this.disableWarmersFns(mxbiConfig.needRemoveWarmer(this.name));
   }
 
   get_name(): string {
@@ -54,9 +55,9 @@ export class AbiGenerator {
     return this.isEmpty;
   }
 
-  disableCacheFns(disable_cache: string[]) {
+  disableWarmersFns(disable_warmers: string[]) {
     this.defaultWarmer = this.defaultWarmer.filter(
-      (name) => !disable_cache.includes(name),
+      (name) => !disable_warmers.includes(name),
     );
   }
 
@@ -104,6 +105,7 @@ export class AbiGenerator {
       this.name,
       this.needInputAddress,
     );
+
     //generated Folder
     endpointsGenerator.generateAbiServiceFn(
       generatedFolderPath,
@@ -131,87 +133,80 @@ export class AbiGenerator {
     graphqlGenerator.graphqlTemplate(endpointFolderPath, this.name);
     warmer.generateAbiCacheWarmerService(this.name, this.folderPath);
   }
-}
 
-export function generateFuncsBody(
-  json: any,
-  name: string,
-  needInputAddress: boolean,
-): [string, string, string[]] {
-  let servicefns: string[] = [];
-  let resolverfns: string[] = [];
-  let defaultWarmer: string[] = [];
-  let variableName = utils.generateVariableName(name);
-  let className = utils.generateClassName(name);
-  const queries = json.endpoints.filter(
-    (endpoint: any) => endpoint.mutability === 'readonly',
-  );
-  queries.forEach((endpoint: any) => {
-    let args: string[] = [];
-    let resolverArgs: string[] = [];
-    let passingParams: string[] = [];
-    let serviceCustomBody = '';
-    let cacheKey = 'generateHash(JSON.stringify(args))';
-    if (needInputAddress) {
-      args.push(`address: string`);
-      resolverArgs.push(`@Parent() ${variableName}: gqlModel.${className}`);
-      serviceCustomBody = `const contract = new SmartContract({
+  generateFuncsBody(): [string, string, string[]] {
+    let servicefns: string[] = [];
+    let resolverfns: string[] = [];
+    let defaultWarmer: string[] = [];
+
+    let variableName = utils.generateVariableName(this.name);
+    let className = utils.generateClassName(this.name);
+    const queries = this.jsonAbi.endpoints.filter(
+      (endpoint: any) => endpoint.mutability === 'readonly',
+    );
+    queries.forEach((endpoint: any) => {
+      let args: string[] = [];
+      let resolverArgs: string[] = [];
+      let passingParams: string[] = [];
+      let serviceCustomBody = '';
+      let cacheKey = 'generateHash(JSON.stringify(args))';
+      if (this.needInputAddress) {
+        args.push(`address: string`);
+        resolverArgs.push(`@Parent() ${variableName}: gqlModel.${className}`);
+        serviceCustomBody = `const contract = new SmartContract({
       address: new Address(address),
         abi: this.getAbiRegistry(this.abiPath) as AbiRegistry,
     });
   const interaction: any = contract.methods.${endpoint.name}(args);
   `;
-      cacheKey = 'generateHash(JSON.stringify(args)).concat(address)';
-    } else {
-      serviceCustomBody = `const interaction: any = this.sm.methods.${endpoint.name}(args);`;
-    }
+        cacheKey = 'generateHash(JSON.stringify(args)).concat(address)';
+      } else {
+        serviceCustomBody = `const interaction: any = this.sm.methods.${endpoint.name}(args);`;
+      }
 
-    args = args.concat(
-      endpoint.inputs.map((input: any) => {
-        let inputName = input.name + 'Args';
-        return `${inputName}: ${utils.abiTypeMapping(input.type, true, true)} `;
-      }),
-    );
+      args = args.concat(
+        endpoint.inputs.map((input: any) => {
+          let inputName = input.name + 'Args';
+          return `${inputName}: ${utils.abiTypeMapping(
+            input.type,
+            true,
+            true,
+          )} `;
+        }),
+      );
 
-    if (args.length == 0) {
-      defaultWarmer.push(endpoint.name);
-    }
+      if (args.length == 0) {
+        defaultWarmer.push(endpoint.name);
+      }
 
-    resolverArgs = resolverArgs.concat(
-      endpoint.inputs.map((input: any) => {
-        return `@Args('${input.name}') ${
-          input.name + 'Args'
-        }: ${utils.abiTypeMapping(input.type, true, true)} `;
-      }),
-    );
+      resolverArgs = resolverArgs.concat(
+        endpoint.inputs.map((input: any) => {
+          return `@Args('${input.name}') ${
+            input.name + 'Args'
+          }: ${utils.abiTypeMapping(input.type, true, true)} `;
+        }),
+      );
 
-    passingParams = passingParams.concat(
-      endpoint.inputs.map((input: any) => {
-        let inputName = input.name + 'Args';
-        return `${inputName}`;
-      }),
-    );
+      passingParams = passingParams.concat(
+        endpoint.inputs.map((input: any) => {
+          let inputName = input.name + 'Args';
+          return `${inputName}`;
+        }),
+      );
 
-    // let returnValue = '';
-    // if (endpoint.outputs[0]?.type == 'Address') {
-    //   returnValue = `${utils.parserMapping(
-    //     endpoint.outputs[0]?.type,
-    //     json,
-    //     true,
-    //   )}.bech32()`;
-    // } else {
-    let returnValue = utils.parserMapping(
-      endpoint.outputs[0]?.type,
-      json,
-      true,
-    );
-    // }
+      let returnValue = utils.parserMapping(
+        endpoint.outputs[0]?.type,
+        this.jsonAbi,
+        true,
+      );
 
-    let classNameType = utils.abiTypeMapping(endpoint.outputs[0]?.type, true);
-    let serviceFns = `
+      let cacheEnable = this.config.isCacheEnable(this.name, endpoint.name);
+      let classNameType = utils.abiTypeMapping(endpoint.outputs[0]?.type, true);
+      let ttl = this.config.redisTtl(this.name, endpoint.name) ?? 6;
+      let serviceFns = `
 async ${endpoint.name}(${args.join(',')})${`: Promise<${
-      classNameType || 'Boolean'
-    }> {`}
+        classNameType || 'Boolean'
+      }> {`}
 const args: any = [${passingParams.join(',')}];
 ${serviceCustomBody}
 const query = interaction.check().buildQuery();
@@ -224,41 +219,52 @@ const { firstValue } = new ResultsParser().parseQueryResponse(
 );
 
 //Handle Parser
-   const cacheInfo = CacheInfo.generateCacheInfo(
-          "${name}",
+  ${
+    cacheEnable
+      ? `const cacheInfo = CacheInfo.generateCacheInfo(
+          "${this.name}",
           "${endpoint.name}",
           ${cacheKey}
     );
     await this.cachingService.setCacheRemote(
       cacheInfo.key,
       ${returnValue},
-      cacheInfo.ttl
-    );
+      ${ttl} 
+    );`
+      : ''
+  }
 
 return ${returnValue};
 } \n
   `;
 
-    if (needInputAddress) {
-      passingParams = ['address'].concat(passingParams);
-    }
-    let resolverFns = `
+      if (this.needInputAddress) {
+        passingParams = ['address'].concat(passingParams);
+      }
+      let resolverFns = `
 @ResolveField()
 async ${endpoint.name}(${resolverArgs.join(',')}) {
     ${
-      needInputAddress ? `const address = String(${variableName}.address);` : ''
+      this.needInputAddress
+        ? `const address = String(${variableName}.address);`
+        : ''
     }
     const args: any = [${passingParams.join(',')}];
 
-    const result =
+    ${
+      cacheEnable
+        ? `const result =
       (await this.cachingService.getCacheRemote<${classNameType}>(
         CacheInfo.generateCacheInfo(
-          "${name}",
+          "${this.name}",
           "${endpoint.name}",
           ${cacheKey}
         ).key
       )) ??
-      (await this.${variableName}Service.${endpoint.name}(${passingParams}));
+      (await this.${variableName}Service.${endpoint.name}(${passingParams}));`
+        : `const result = await this.${variableName}Service.${endpoint.name}(${passingParams})`
+    }
+
   if (!result) {
     throw new NotFoundException('Result not found');
   }
@@ -266,8 +272,9 @@ async ${endpoint.name}(${resolverArgs.join(',')}) {
   return result;
 }
 `;
-    servicefns.push(serviceFns);
-    resolverfns.push(resolverFns);
-  });
-  return [servicefns.join('\n'), resolverfns.join('\n'), defaultWarmer];
+      servicefns.push(serviceFns);
+      resolverfns.push(resolverFns);
+    });
+    return [servicefns.join('\n'), resolverfns.join('\n'), defaultWarmer];
+  }
 }

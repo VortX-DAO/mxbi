@@ -30,6 +30,13 @@ export function abiTypeMapping(
   } else if (type.includes('tuple')) {
     const result = stringUtils.tupleToObject(type);
     return abiTypeMapping(result, isTsFn);
+  } else if (type.includes('Option')) {
+    // const result = `${abiTypeMapping(
+    //   stringUtils.optionType(type),
+    //   isTsFn,
+    //   isArgs,
+    // )}`;
+    return abiTypeMapping(stringUtils.optionType(type), isTsFn, isArgs);
   } else {
     if (isTsFn) {
       switch (type) {

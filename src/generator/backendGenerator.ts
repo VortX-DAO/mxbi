@@ -33,15 +33,12 @@ async function newBackend(contractPath: string, config: mxbiConfig.MxbiConfig) {
       config,
     );
 
-    let disable_cache_fns: string[] = config.functions
-      .filter((fn) => fn.abi_name == abi.get_name() && fn.cache_disable == true)
-      .map((v) => v.name!);
-    abi.disableCacheFns(disable_cache_fns);
-
     let name = abi.get_name();
     if (abi.isEmpty) {
       continue;
     }
+
+    console.log(`Generate new ${name}`);
     abi.generate_new_backend();
     let className = utils.generateClassName(name);
     names.push(name);
@@ -60,7 +57,7 @@ async function newBackend(contractPath: string, config: mxbiConfig.MxbiConfig) {
     'config/config.testnet.yaml',
   ];
   configFolders.forEach((item) => {
-    generateConfigFile(item, names, allAbis, config.network);
+    generateConfigFile(item, names, allAbis, config.getNetwork());
   });
 
   // Create endpoints.services.module.ts
@@ -106,10 +103,6 @@ async function upgradeBackend(
       continue;
     }
 
-    let disable_cache_fns: string[] = config.functions
-      .filter((fn) => fn.abi_name == abi.get_name() && fn.cache_disable == true)
-      .map((v) => v.name || '');
-    abi.disableCacheFns(disable_cache_fns);
     let name = abi.get_name();
     if (fs.existsSync(`${endpointsFolder}/endpoints/${name}`)) {
       console.log(`Upgrade ${name}`);
@@ -130,7 +123,7 @@ async function upgradeBackend(
 
   // Generate config.yaml
   let configFolder = `config/config.yaml`;
-  generateConfigFile(configFolder, names, allAbis, config.network);
+  generateConfigFile(configFolder, names, allAbis, config.getNetwork());
 
   // Create endpoints.services.module.ts
   endpointGenertor.generateEndpointServicesModule(

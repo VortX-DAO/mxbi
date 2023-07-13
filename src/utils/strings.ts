@@ -36,7 +36,16 @@ export function generateVariableName(v: string): string {
   return decapitalizeFirstLetter(snakeCaseToCamelCase(v));
 }
 
-//Complex string utils
+//Complex string utils//
+export function optionType(opt: string): string {
+  const regex = /Option<(.+)>/i;
+  const match = opt.match(regex);
+  if (match) {
+    return match[1];
+  }
+  return '';
+}
+
 export function listStringToArray(listStr: string): string {
   const regex = /List<(.+)>/i;
   const match = listStr.match(regex);

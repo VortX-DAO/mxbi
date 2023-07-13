@@ -16,18 +16,18 @@ export const buildContract = (inputPath: string): Promise<void> => {
     `,
     ]);
 
-    // child.stdout.on('data', (data) => {
-    //   console.log(`stdout:\n${data}`);
-    // });
-    //
-    // child.stderr.on('data', (data) => {
-    //   console.error(`stderr:\n${data}`);
-    // });
-    //
-    // child.on('error', (error) => {
-    //   console.error(`error:\n${error.message}`);
-    // });
-    //
+    child.stdout.on('data', (data) => {
+      console.log(`stdout:\n${data}`);
+    });
+
+    child.stderr.on('data', (data) => {
+      console.error(`stderr:\n${data}`);
+    });
+
+    child.on('error', (error) => {
+      console.error(`error:\n${error.message}`);
+    });
+
     child.on('close', (code) => {
       console.log(`Contracts built - code: ${code}`);
       resolve();

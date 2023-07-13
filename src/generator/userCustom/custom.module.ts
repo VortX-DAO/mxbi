@@ -1,7 +1,7 @@
 import * as utils from '../../utils';
 
 export function generateCustomModuleFn(folderPath: string, name: string) {
-  console.log('Generate *.module File');
+  // console.log('Generate *.module File');
   let className = utils.generateClassName(name);
   let moduleFilePath = `${folderPath}/${name}.module.ts`;
   let moduleContent = `/* eslint-disable eol-last */
