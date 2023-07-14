@@ -96,7 +96,7 @@ export function generateContractModel(
         const variants = typeData.variants
           .map((variant: any) => variant.name)
           .join('\n  ');
-        return `enum ${typeName} { \n  ${variants} \n } `;
+        return `enum ${typeName}Input { \n  ${variants} \n } `;
       } else {
         return `scalar ${typeName} `;
       }

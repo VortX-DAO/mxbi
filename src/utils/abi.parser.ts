@@ -60,6 +60,7 @@ export function abiTypeMapping(
           case 'BigUint':
           case 'TokenIdentifierType':
           case 'TokenIdentifier':
+          case 'EgldOrEsdtTokenIdentifier':
             return 'string';
           case 'bytes':
           case 'string':
@@ -95,6 +96,7 @@ export function abiTypeMapping(
           case 'TokenIdentifierType':
           case 'TokenIdentifier':
           case 'string':
+          case 'EgldOrEsdtTokenIdentifier':
             return 'String';
           case 'bool':
             return 'Boolean';
@@ -135,6 +137,7 @@ export function abiTypeMapping(
           case 'TokenIdentifierType':
           case 'TokenIdentifier':
           case 'Address':
+          case 'EgldOrEsdtTokenIdentifier':
             return 'string';
           case 'bytes':
           case 'string':
