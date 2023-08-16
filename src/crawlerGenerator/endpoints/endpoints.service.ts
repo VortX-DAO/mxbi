@@ -71,10 +71,6 @@ export class GeneratedService {
     return AbiRegistry.create(JSON.parse(data));
   }
 
-  _address(): string {
-    return this.apiConfigService.getContractAddress("${name}")[0];
-  }
-
   // Generate ABI view functions
   ${serviceFns}
 }

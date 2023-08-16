@@ -77,7 +77,7 @@ export function abiTypeMapping(
               if (isArgs) {
                 return 'string';
               } else {
-                return 'gqlModel.GQLAddress';
+                return 'gqlModel.AddressCustom';
               }
             }
             if (type.includes('[')) {
@@ -104,7 +104,7 @@ export function abiTypeMapping(
           case 'u64':
           case 'u32':
           case 'u8':
-            return 'Int';
+            return 'Float';
           default:
             if (type.includes('[')) {
               return type;
@@ -113,7 +113,7 @@ export function abiTypeMapping(
               if (isArgs) {
                 return 'String';
               } else {
-                return 'BufferCustom';
+                return 'Hex';
               }
             }
             if (type == 'Address') {
@@ -183,6 +183,20 @@ export function parserMapping(
 ): string {
   if (isCustomType(abiTypeMapping(type, mappingFor), 'enum', json)) {
     return 'firstValue?.valueOf().name';
+  } else if (/variadic<multi<([^>]+)>>/.test(type)) {
+    const match = /variadic<multi<([^>]+)>>/.exec(type);
+    if (match && match[1]) {
+      const elements = match[1].split(',');
+      const fields = elements
+        .map((_, index) => `field${index}: item[${index}]`)
+        .join(',\n        ');
+
+      return `firstValue?.valueOf().map((item: any) => ({
+        ${fields}
+      }))`;
+    } else {
+      return 'ERROR';
+    }
   } else {
     return 'firstValue?.valueOf()';
   }

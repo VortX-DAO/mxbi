@@ -18,7 +18,7 @@ export class ${className}CacheWarmerService {
   @Cron('* * * * * *')
   async handleCacheValidiation() {
     await Locker.lock(
-      'Refreshing ${name} cache validation',
+      'Refreshing lqash cache validation',
       async () => {
         await this.${variableName}Service.cacheWarmer();
       },

@@ -111,10 +111,11 @@ export function generateContractModel(
   let className = utils.generateClassName(name);
   let variableName = utils.generateVariableName(name);
   let graphqlContent = `scalar AddressCustom
-scalar BufferCustom
+scalar Hex 
 
 type ${className} {
-  ${needInputAddress == true ? 'address: String\n' : ''}${queries}
+  _address: String
+  ${queries}
 }
 
 type Query {
@@ -132,24 +133,47 @@ ${types}`;
   utils.writeGraphqlFile(graphqlFile, graphqlContent);
 }
 
+// function generateTupleType(str: string): string | undefined {
+//   const check = extractTupleType(str);
+//   if (check != undefined) {
+//     let type0 = utils.abiTypeMapping(check[0], utils.TypeMapping.Graphql);
+//     let type1 = utils.abiTypeMapping(check[1], utils.TypeMapping.Graphql);
+//     return `type ${utils.generateClassName(check[0])}${check[1]}TupleObj {
+//   first: ${type0}
+//   second: ${type1}
+// }\n\n`;
+//   }
+//   return undefined;
+// }
+
 function generateTupleType(str: string): string | undefined {
   const check = extractTupleType(str);
   if (check != undefined) {
-    let type0 = utils.abiTypeMapping(check[0], utils.TypeMapping.Graphql);
-    let type1 = utils.abiTypeMapping(check[1], utils.TypeMapping.Graphql);
-    return `type ${utils.generateClassName(check[0])}${check[1]}TupleObj {
-  first: ${type0}
-  second: ${type1}
-}\n\n`;
+    let fields = '';
+    for (let i = 0; i < check.length; i++) {
+      let type = utils.abiTypeMapping(check[i], utils.TypeMapping.Graphql);
+      fields += `  field${i}: ${type}\n`;
+    }
+    return `type ${check
+      .map((v) => utils.generateClassName(v))
+      .join('')}TupleObj {\n${fields}}\n\n`;
   }
   return undefined;
 }
 
-function extractTupleType(str: string): [string, string] | undefined {
-  const tupleRegex = /(?:tuple|variadic<multi>|multi)<(\w+),(\w+)>/;
+function extractTupleType(str: string): string[] | undefined {
+  const tupleRegex = /(?:tuple|variadic<multi>|multi)<((?:\w+,\s*)+\w+)>/;
   const match = str.match(tupleRegex);
   if (match) {
-    return [match[1], match[2]];
+    return match[1].split(',').map((str) => str.trim());
   }
   return undefined;
 }
+// function extractTupleType(str: string): [string, string] | undefined {
+//   const tupleRegex = /(?:tuple|variadic<multi>|multi)<(\w+),(\w+)>/;
+//   const match = str.match(tupleRegex);
+//   if (match) {
+//     return [match[1], match[2]];
+//   }
+//   return undefined;
+// }

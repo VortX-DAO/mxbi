@@ -25,26 +25,6 @@ export class GeneratedResolver {
   ) {}
   // Generate ABI view functions
   ${resolverFns}
-
-  ${
-    needInputAddress
-      ? `
-
-  @ResolveField()
-  _address(
-    @Parent() ${variableName}: gqlModel.${className}
- ): string {
-    return String(${variableName}._address);
-  }
-    `
-      : `
-
-  @ResolveField()
-  _address(): string {
-    return this.${variableName}Service._address();
-  }
-  `
-  }
 }
 
 @Resolver(() => Query)
@@ -54,7 +34,7 @@ export class QueryGeneratedResolver {
     needInputAddress ? "@Args('address') address: string" : ''
   }): gqlModel.${className} {
   const ${variableName} = new gqlModel.${className}();
-  ${needInputAddress ? `${variableName}._address = address;` : ''}
+  ${needInputAddress ? `${variableName}.address = address;` : ''}
   return ${variableName};
   }
 }

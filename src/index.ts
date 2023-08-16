@@ -4,6 +4,7 @@ import { Command } from 'commander';
 const figlet = require('figlet');
 
 import { generateBackend } from './backendGnerator/';
+import { generateCrawler } from './crawlerGenerator/';
 
 const program = new Command();
 
@@ -36,4 +37,25 @@ program
     },
   );
 
+program
+  .command('generate-crawler')
+  .description('Generate Crawler for MX Smartcontract events')
+  .option('-c, --contractPath <contractPath>', 'contract Path')
+  .option('-s, --skip-build', 'skip Build', false)
+  .action(
+    ({
+      contractPath,
+      skipBuild,
+    }: {
+      contractPath: string;
+      skipBuild: boolean;
+    }) => {
+      if (!contractPath) {
+        console.error('Contract Path is required');
+        process.exit(1);
+      }
+      console.log('Generate crawler');
+      generateCrawler(contractPath, skipBuild); // please replace generateCrawler with your actual function
+    },
+  );
 program.parse();

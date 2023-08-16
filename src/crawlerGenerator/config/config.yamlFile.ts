@@ -42,13 +42,12 @@ wallet:
   ${contractAddress}
 abi:
   ${contractPath}
-batchSize: 100
 database:
-  host: "localhost"
-  port: 5432
-  username: "typeormtest"
-  password: "password"
-  name: "typeormtest"
+  host: 'localhost'
+  port: 3306
+  username: 'root'
+  password: 'root'
+  name: 'example'
 features:
   publicApi:
     enabled: true
@@ -79,8 +78,6 @@ keepAliveTimeout:
   downstream: 61000
   upstream: 60000
 useCachingInterceptor: false
-defaultCacheTTLNoParramFunc: 36
-defaultCacheTTLParramFunc: 2
   `;
   utils.writeFile(path, configContent, false);
 }

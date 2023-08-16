@@ -27,7 +27,7 @@ export class Query${className}Resolver {
     needInputAddress ? "@Args('address') address: string" : ''
   }): gqlModel.${className} {
   const ${variableName} = new gqlModel.${className}();
-  ${needInputAddress ? `${variableName}.address = address;` : ''}
+  ${needInputAddress ? `${variableName}._address = address;` : ''}
   return ${variableName};
   }
 }

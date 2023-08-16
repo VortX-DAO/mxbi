@@ -16,6 +16,7 @@ export class Network {
   chain_id?: string;
   proxy_url?: string;
   redis_url?: string;
+  default_ttl?: number;
 }
 
 export class MxbiConfig {
@@ -35,6 +36,8 @@ export class MxbiConfig {
       doc.network?.proxy_url || constants.DEFAULT_RPC_ENDPOINT;
     this.network.redis_url =
       doc.network?.redis_url || constants.DEFAULT_REDIS_URL;
+    this.network.default_ttl =
+      doc.network?.default_ttl || constants.DEFAULT_TTL;
 
     this.functions =
       doc.functions?.map((func: any) => ({

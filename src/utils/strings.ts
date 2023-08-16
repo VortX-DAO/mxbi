@@ -70,23 +70,38 @@ export function variadicStringToArray(listStr: string): string {
 }
 
 export function multiToObject(multiStr: string): string {
-  const regex = /multi<(.+),\s*(.+)>/i;
+  const regex = /multi<(.+)>/i;
   const match = multiStr.match(regex);
   if (match) {
-    const typeA = match[1];
-    const typeB = match[2];
-    return `${capitalizeFirstLetter(typeA)}${typeB}TupleObj`;
+    const types = match[1]
+      .split(',')
+      .map((str) => str.trim().replace(/[<>]/g, ''));
+    const capitalizedTypes = types.map((type) => capitalizeFirstLetter(type));
+    return `${capitalizedTypes.join('')}TupleObj`;
   }
-  return '';
+  return `Can not parse ${multiStr} type`;
 }
-
+//
 export function tupleToObject(multiStr: string): string {
-  const regex = /tuple<(.+),\s*(.+)>/i;
+  const regex = /tuple<(.+)>/i;
   const match = multiStr.match(regex);
   if (match) {
-    const typeA = match[1];
-    const typeB = match[2];
-    return `${capitalizeFirstLetter(typeA)}${typeB}TupleObj`;
+    const types = match[1].split(',').map((str) => str.trim());
+    const capitalizedTypes = types.map((type) => capitalizeFirstLetter(type));
+    return `${capitalizedTypes.join('')}TupleObj`;
   }
-  return '';
+  return `Can not parse ${multiStr} type`;
 }
+// export function tupleToObject(multiStr: string): string {
+//   const regex = /tuple<((?:.+?,\s*)+.?)>/i;
+//   const match = multiStr.match(regex);
+//   if (match) {
+//     const types = match[1].split(",").map((type) => type.trim());
+//     return (
+//       types
+//         .map((type, i) => (i === 0 ? capitalizeFirstLetter(type) : type))
+//         .join("") + "TupleObj"
+//     );
+//   }
+//   return `0 Parse dc ${multiStr}`;
+// }

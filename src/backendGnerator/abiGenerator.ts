@@ -181,13 +181,12 @@ export class AbiGenerator {
 
       resolverArgs = resolverArgs.concat(
         endpoint.inputs.map((input: any) => {
-          return `@Args('${input.name}') ${
-            input.name + 'Args'
-          }: ${utils.abiTypeMapping(
-            input.type,
-            utils.TypeMapping.Typescript,
-            true,
-          )} `;
+          return `@Args('${input.name}') ${input.name + 'Args'
+            }: ${utils.abiTypeMapping(
+              input.type,
+              utils.TypeMapping.Typescript,
+              true,
+            )} `;
         }),
       );
 
@@ -209,11 +208,17 @@ export class AbiGenerator {
         endpoint.outputs[0]?.type,
         utils.TypeMapping.Typescript,
       );
-      let ttl = this.config.redisTtl(this.name, endpoint.name) ?? 6;
+      let ttl = ``;
+      if (this.config.redisTtl(this.name, endpoint.name) != undefined) {
+        ttl = `${this.config.redisTtl(this.name, endpoint.name)}`;
+      } else if (passingParams.length > 0) {
+        ttl = `this.apiConfigService.cacheTTLParamsFunc()`;
+      } else {
+        ttl = `this.apiConfigService.cacheTTLNoParamFunc()`;
+      }
       let serviceFns = `
-async ${endpoint.name}(${args.join(',')})${`: Promise<${
-        classNameType || 'Boolean'
-      }> {`}
+async ${endpoint.name}(${args.join(',')})${`: Promise<${classNameType || 'Boolean'
+        }> {`}
 const args: any = [${passingParams.join(',')}];
 ${serviceCustomBody}
 const query = interaction.check().buildQuery();
@@ -224,24 +229,24 @@ const { firstValue } = new ResultsParser().parseQueryResponse(
   queryResponse,
   interaction.getEndpoint()
 );
+let result = ${returnValue}
 
 //Handle Parser
-  ${
-    cacheEnable
-      ? `const cacheInfo = CacheInfo.generateCacheInfo(
+  ${cacheEnable
+          ? `const cacheInfo = CacheInfo.generateCacheInfo(
           "${this.name}",
           "${endpoint.name}",
           ${cacheKey}
     );
     await this.cachingService.setCacheRemote(
       cacheInfo.key,
-      ${returnValue},
+      result,
       ${ttl} 
     );`
-      : ''
-  }
+          : ''
+        }
 
-return ${returnValue};
+return result;
 } \n
   `;
 
@@ -251,16 +256,14 @@ return ${returnValue};
       let resolverFns = `
 @ResolveField()
 async ${endpoint.name}(${resolverArgs.join(',')}) {
-    ${
-      this.needInputAddress
-        ? `const address = String(${variableName}.address);`
-        : ''
-    }
+    ${this.needInputAddress
+          ? `const address = String(${variableName}._address);`
+          : ''
+        }
     const args: any = [${passingParams.join(',')}];
 
-    ${
-      cacheEnable
-        ? `const result =
+    ${cacheEnable
+          ? `const result =
       (await this.cachingService.getCacheRemote<${classNameType}>(
         CacheInfo.generateCacheInfo(
           "${this.name}",
@@ -269,10 +272,10 @@ async ${endpoint.name}(${resolverArgs.join(',')}) {
         ).key
       )) ??
       (await this.${variableName}Service.${endpoint.name}(${passingParams}));`
-        : `const result = await this.${variableName}Service.${endpoint.name}(${passingParams})`
-    }
+          : `const result = await this.${variableName}Service.${endpoint.name}(${passingParams})`
+        }
 
-  if (!result) {
+  if (result == undefined) {
     throw new NotFoundException('Result not found');
   }
 
